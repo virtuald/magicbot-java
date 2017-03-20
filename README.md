@@ -50,7 +50,7 @@ public class MyAutonomous extends AutonomousStateMachine {
     driveTrain.move(-0.8, 0);
   }
   
-  @TimedState(duration=1.0)
+  @TimedState(duration=1.0, nextState="driveForwardAgain")
   public void rotate() {
     driveTrain.move(0, 0.5);
   }
