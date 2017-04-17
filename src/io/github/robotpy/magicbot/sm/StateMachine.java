@@ -126,13 +126,12 @@ public class StateMachine implements MagicComponent {
 	private boolean m_engaged = false;
 	
 	// All states
-	private Map<String, StateData> m_states;
+	private final Map<String, StateData> m_states;
 
 	// The currently executing state, or null if not executing
 	private StateData m_state = null;
 	
-	private String m_firstState = null;
-	protected String m_currentState = "";
+	private final String m_firstState;
 	
 	double m_start = 0.0;
 	
@@ -141,6 +140,8 @@ public class StateMachine implements MagicComponent {
 	protected Clock m_clock = Clock.systemUTC();
 	
 	public StateMachine() {
+		
+		String firstState = null;
 		
 		m_states = new HashMap<>();
 		
@@ -200,20 +201,23 @@ public class StateMachine implements MagicComponent {
 			}
 			
 			if (state.first) {
-				if (m_firstState != null) {
+				if (firstState != null) {
 					throw new MultipleFirstStatesError("Multiple states were specified as the first state!");
 				}
 				
-				m_firstState = state.name;
+				firstState = state.name;	
+			}
 				
 			}
 			
 			m_states.put(state.name, state);
 		}
 		
-		if (m_firstState == null) {
+		if (firstState == null) {
 			throw new NoFirstStateException("Starting state not defined!");
 		}
+		
+		m_firstState = firstState;
 	}
 	
 	
@@ -222,6 +226,13 @@ public class StateMachine implements MagicComponent {
 	 */
 	public boolean isExecuting() {
 		return m_engaged;
+	}
+	
+	/**
+	 * @return name of currently executing state
+	 */
+	public String getCurrentState() {
+		return m_state == null ? "" : m_state.name;
 	}
 	
 	/**
@@ -272,7 +283,6 @@ public class StateMachine implements MagicComponent {
 		}
 		
 		state.ran = false;
-		m_currentState = state.name;
 		m_state = state;
 	}
 	
