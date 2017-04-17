@@ -28,6 +28,7 @@ import java.util.List;
 import org.junit.Test;
 
 import io.github.robotpy.magicbot.exceptions.InvalidDurationException;
+import io.github.robotpy.magicbot.exceptions.MultipleDefaultStatesError;
 import io.github.robotpy.magicbot.exceptions.MultipleFirstStatesError;
 import io.github.robotpy.magicbot.exceptions.NoFirstStateException;
 
@@ -357,4 +358,146 @@ public class StateMachineTest {
 	    );
 	}
 	
+	class MultipleDefaultStates extends StateMachine {
+		@State(first=true)
+		private void tmp1(Double tm) {}
+		
+		@DefaultState
+		private void tmp2(Double tm) {}
+		
+		@DefaultState
+		private void tmp3(double tm, boolean initial) {}
+	}
+	
+	@Test
+	public void testMultipleDefaultStates() {
+		try {
+			new MultipleDefaultStates();
+			fail();
+		} catch (MultipleDefaultStatesError e) {
+			// ok
+		}
+	}
+	
+	class DefaultStateSm extends StateMachine {
+		
+		public DefaultStateSm() {
+			super();
+			m_verboseLogging = true;
+		}
+		
+		Boolean didOne = null;
+		Boolean didDefault = null;
+		Boolean defaultInit = null;
+		Boolean didDone = null;
+		
+		@State(first=true)
+		public void stateOne() {
+			didOne = true;
+			didDefault = false;
+			didDone = false;
+		}
+		
+		@State
+		public void doneState() {
+			didOne = false;
+			didDefault = false;
+			didDone = true;
+			done();
+		}
+		
+		@DefaultState
+		public void defaultState(boolean initial) {
+			didOne = false;
+			didDefault = true;
+			defaultInit = initial;
+			didDone = false;
+		}
+		
+	}
+	
+	@Test
+	public void testDefaultStateSm() {
+		
+		// don't do anything, should be default
+		DefaultStateSm sm = new DefaultStateSm();
+		
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertTrue(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertFalse(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		// do a thing
+		sm.engage();
+		sm.execute();
+		assertTrue(sm.didOne);
+		assertFalse(sm.didDefault);
+		assertFalse(sm.didDone);
+		
+		// should go back (test for initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertTrue(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		// should happen again (no initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertFalse(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		
+		// do another thing
+		sm.engage();
+		sm.execute();
+		assertTrue(sm.didOne);
+		assertFalse(sm.didDefault);
+		assertFalse(sm.didDone);
+		
+		// should go back (test for initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertTrue(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		// should happen again (no initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertFalse(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		// enagage a state that will call done, check to see
+		// if we come back
+		sm.engage("doneState");
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertFalse(sm.didDefault);
+		assertFalse(sm.defaultInit);
+		assertTrue(sm.didDone);
+		
+		// should go back (test for initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertTrue(sm.defaultInit);
+		assertFalse(sm.didDone);
+		
+		// should happen again (no initial)
+		sm.execute();
+		assertFalse(sm.didOne);
+		assertTrue(sm.didDefault);
+		assertFalse(sm.defaultInit);
+		assertFalse(sm.didDone);
+	}
 }

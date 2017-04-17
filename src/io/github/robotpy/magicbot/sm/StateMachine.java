@@ -27,6 +27,7 @@ import java.util.Map;
 
 import io.github.robotpy.magicbot.MagicComponent;
 import io.github.robotpy.magicbot.exceptions.InvalidDurationException;
+import io.github.robotpy.magicbot.exceptions.MultipleDefaultStatesError;
 import io.github.robotpy.magicbot.exceptions.MultipleFirstStatesError;
 import io.github.robotpy.magicbot.exceptions.NoFirstStateException;
 
@@ -84,6 +85,7 @@ public class StateMachine implements MagicComponent {
 		
 		final boolean first;
 		final boolean mustFinish;
+		final boolean isDefault;
 		
 		final StateMethod stateMethod;
 		
@@ -95,6 +97,7 @@ public class StateMachine implements MagicComponent {
 			name = stateName;
 			first = s.first();
 			mustFinish = s.mustFinish();
+			isDefault = false;
 			
 			nextState = null;
 			duration = Double.MAX_VALUE;
@@ -114,6 +117,19 @@ public class StateMachine implements MagicComponent {
 			
 			first = ts.first();
 			mustFinish = ts.mustFinish();
+			isDefault = false;
+			
+			stateMethod = m;
+		}
+		
+		StateData(String stateName, DefaultState s, StateMethod m) {
+			name = stateName;
+			duration = Double.MAX_VALUE;
+			nextState = null;
+			
+			first = false;
+			mustFinish = true;
+			isDefault = true;
 			
 			stateMethod = m;
 		}
@@ -132,6 +148,7 @@ public class StateMachine implements MagicComponent {
 	private StateData m_state = null;
 	
 	private final String m_firstState;
+	private final StateData m_defaultState;
 	
 	double m_start = 0.0;
 	
@@ -142,6 +159,7 @@ public class StateMachine implements MagicComponent {
 	public StateMachine() {
 		
 		String firstState = null;
+		StateData defaultState = null;
 		
 		m_states = new HashMap<>();
 		
@@ -151,8 +169,9 @@ public class StateMachine implements MagicComponent {
 			// check for state annotations
 			State stateAnn = method.getAnnotation(State.class);
 			TimedState tsAnn = method.getAnnotation(TimedState.class);
+			DefaultState dfAnn = method.getAnnotation(DefaultState.class);
 			
-			if (stateAnn == null && tsAnn == null) {
+			if (stateAnn == null && tsAnn == null && dfAnn == null) {
 				continue;
 			}
 			
@@ -195,6 +214,9 @@ public class StateMachine implements MagicComponent {
 				
 			} else if (tsAnn != null) {
 				state = new StateData(methodName, tsAnn, stateMethod);
+			
+			} else if (dfAnn != null) {
+				state = new StateData(methodName, dfAnn, stateMethod);
 				
 			} else {
 				continue;
@@ -207,7 +229,13 @@ public class StateMachine implements MagicComponent {
 				
 				firstState = state.name;	
 			}
+			
+			if (state.isDefault) {
+				if (defaultState != null) {
+					throw new MultipleDefaultStatesError("Multiple states were specified as the default state!");
+				}
 				
+				defaultState = state;
 			}
 			
 			m_states.put(state.name, state);
@@ -218,6 +246,7 @@ public class StateMachine implements MagicComponent {
 		}
 		
 		m_firstState = firstState;
+		m_defaultState = defaultState;
 	}
 	
 	
@@ -262,7 +291,7 @@ public class StateMachine implements MagicComponent {
 	public void engage(String initialState, boolean force) {
 		m_shouldEngage = true;
 		
-		if (force || m_state == null) {
+		if (force || m_state == null || m_state == m_defaultState) {
 			if (initialState != null) {
 				nextState(initialState);
 			} else {
@@ -309,13 +338,13 @@ public class StateMachine implements MagicComponent {
 		
 		m_state = null;
 		m_engaged = false;
-		m_currentState = "";
 	}
 	
 	/**
 	 * MagicComponent API: This is called on each iteration of the
 	 * control loop. Most of the time, you will not want to override
-	 * this function
+	 * this function. If you find you want to, use @DefaultState
+	 * instead.
 	 */
 	@Override
 	public void execute() {
@@ -326,11 +355,12 @@ public class StateMachine implements MagicComponent {
 			if (m_shouldEngage) {
 				m_start = now;
 				m_engaged = true;
-			} else {
+			} else if (m_defaultState == null) {
 				return;
 			}
 		}
 		
+		// tm is the number of seconds that the state machine has been executing
 		double tm = now - m_start;
 		StateData state = m_state;
 		
@@ -339,12 +369,8 @@ public class StateMachine implements MagicComponent {
         // states. Otherwise, the time drifts.
 		double new_state_start = tm;
 		
-		if (state == null) {
-			done();
-		}
-		
 		// determine if the time has passed to execute the next state
-        // -> intentionally comes first
+		// -> intentionally comes first
 		if (state != null && state.expires < tm) {
             if (state.nextState == null) {
                 state = null;
@@ -355,9 +381,25 @@ public class StateMachine implements MagicComponent {
             }
 		}
         
-        if (state == null || (!m_shouldEngage && !state.mustFinish)) {
-            done();
-        } else {
+		// deactivate the current state unless engage was called
+		// or mustFinish was set
+        if (state != null && !m_shouldEngage && !state.mustFinish) {
+        	state = null;
+        }
+        
+        // if there is no state to execute and there is a default
+        // state, do the default state
+        if (state == null && m_defaultState != null) {
+        	state = m_defaultState;
+        	
+        	if (m_state != m_defaultState) {
+				m_state = m_defaultState;
+				m_state.ran = false;
+			}
+        }
+        
+        // finally, either execute the state
+        if (state != null) {
             // is this the first time this was executed?
             boolean initial_call = !state.ran;
             if (initial_call) {
@@ -372,6 +414,9 @@ public class StateMachine implements MagicComponent {
             
             // execute the state function, passing it the arguments
             state.stateMethod.execute(tm - state.startTime, initial_call);
+        } else {
+        	// or clear the state
+        	done();
         }
         
         // Reset this each time
