@@ -3,3 +3,11 @@ install:
 - mkdir -p ~/wpilib/java/current/lib
 - wget http://first.wpi.edu/FRC/roborio/maven/release/edu/wpi/first/wpilibj/wpilibj-java/2018.3.2/wpilibj-java-2018.3.2.jar -O ~/wpilib/java/current/lib/wpilib.jar
 - wget http://first.wpi.edu/FRC/roborio/maven/release/edu/wpi/first/ntcore/ntcore-java/4.0.0/ntcore-java-4.0.0.jar -O ~/wpilib/java/current/lib/ntcore.jar
+script: ant clean test jar
+deploy:
+- provider: releases
+  api_key: $GITHUB_OAUTH_TOKEN
+  file: build/jar/Magicbot.jar
+  skip_cleanup: true
+  on:
+    tags: true
