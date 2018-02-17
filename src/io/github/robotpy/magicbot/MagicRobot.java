@@ -233,13 +233,13 @@ public abstract class MagicRobot extends SampleRobot {
 		
 		autoMode.onEnabled();
 		
-		PreciseDelay delay = new PreciseDelay(m_controlLoopWaitTime);
-		
-		while (isAutonomous() && isEnabled()) {
-			
-			autoMode.autonomousPeriodic();
-			execute();
-			delay.delay();
+		try (PreciseDelay delay = new PreciseDelay(m_controlLoopWaitTime)) {
+			while (isAutonomous() && isEnabled()) {
+				
+				autoMode.autonomousPeriodic();
+				execute();
+				delay.delay();
+			}
 		}
 		
 		autoMode.onDisabled();
@@ -257,13 +257,13 @@ public abstract class MagicRobot extends SampleRobot {
 		
 		teleopInit();
 		
-		PreciseDelay delay = new PreciseDelay(m_controlLoopWaitTime);
-		
-		while (isOperatorControl() && isEnabled()) {
-			teleopPeriodic();
-			
-			execute();
-			delay.delay();
+		try (PreciseDelay delay = new PreciseDelay(m_controlLoopWaitTime)) {
+			while (isOperatorControl() && isEnabled()) {
+				teleopPeriodic();
+				
+				execute();
+				delay.delay();
+			}
 		}
 		
 		disableComponents();

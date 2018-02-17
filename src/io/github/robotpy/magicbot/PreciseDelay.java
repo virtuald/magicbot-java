@@ -16,19 +16,26 @@
 
 package io.github.robotpy.magicbot;
 
-import edu.wpi.first.wpilibj.Timer;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class PreciseDelay {
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.hal.NotifierJNI;
+
+public class PreciseDelay implements AutoCloseable {
 
 	private final double m_period;
-	private double m_nextDelay;
+	private double m_expirationTime;
+	
+	private final AtomicInteger m_notifier = new AtomicInteger();
 
 	/**
 	 * @param period Delay time in seconds
 	 */
 	public PreciseDelay(double period) {
+		m_notifier.set(NotifierJNI.initializeNotifier());
 		m_period = period;
-		m_nextDelay = Timer.getFPGATimestamp() + m_period;
+		m_expirationTime = RobotController.getFPGATime() * 1e-6 + m_period;
+		NotifierJNI.updateNotifierAlarm(m_notifier.get(), (long) (m_expirationTime * 1e6));
 	}
 	
 	/**
@@ -36,14 +43,24 @@ public class PreciseDelay {
 	 */
 	public void delay() {
 		
-		// we must always yield here, just in case
-		Timer.delay(0.0002);
-		
-		double delayPeriod = m_nextDelay - Timer.getFPGATimestamp();
-		if (delayPeriod > 0.0001) {
-			Timer.delay(delayPeriod);
+		int notifier = m_notifier.get();
+		if (notifier == 0) {
+			throw new RuntimeException("Cannot use PreciseDelay object after closing it");
 		}
 		
-		m_nextDelay += m_period;
+		NotifierJNI.waitForNotifierAlarm(notifier);
+		
+		// update the wait period
+		m_expirationTime += m_period;
+		NotifierJNI.updateNotifierAlarm(notifier, (long) (m_expirationTime * 1e6));
+	}
+	
+	@Override
+	public void close() {
+		int handle = m_notifier.getAndSet(0);
+		if (handle != 0) {
+			NotifierJNI.stopNotifier(handle);
+			NotifierJNI.cleanNotifier(handle);
+		}
 	}
 }
