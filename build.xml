@@ -1,32 +1,60 @@
 <project name="Magicbot" basedir="." default="main">
 
-    <property name="src.dir"     value="src"/>
+    <property name="main.build.dir" value="build/main"/>
+    <property name="main.src.dir" value="src"/>
+    <property name="test.build.dir" value="build/test"/>
+    <property name="test.src.dir" value="test"/>
 
-    <property name="build.dir"   value="build"/>
-    <property name="classes.dir" value="${build.dir}/classes"/>
-    <property name="jar.dir"     value="${build.dir}/jar"/>
+    <property name="jar.dir"     value="build/jar"/>
     
     <property name="publish.dir" value="${user.home}/wpilib/user/java/lib"/>
     
     <path id="classpath">
         <fileset dir="${user.home}/wpilib/java/current/lib" includes="**/*.jar"/>
     </path>
-
+    
+    <path id="classpath.test">
+        <path refid="classpath"/>
+        <pathelement location="lib/junit-4.12.jar"/>
+        <pathelement location="lib/hamcrest-core-1.3.jar"/>
+        <pathelement location="${main.build.dir}"/>
+    </path>
 
     <target name="clean">
-        <delete dir="${build.dir}"/>
+        <delete dir="${main.build.dir}"/>
+        <delete dir="${test.build.dir}"/>
     </target>
 
     <target name="compile">
-        <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath"/>
+        <mkdir dir="${main.build.dir}"/>
+        <javac srcdir="${main.src.dir}" destdir="${main.build.dir}" classpathref="classpath" includeantruntime="false"/>
+    </target>
+    
+    <target name="test-compile" depends="compile">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" includeantruntime="false">
+            <classpath refid="classpath.test"/>
+        </javac>
+    </target>
+    
+    <target name="test" depends="test-compile">
+        <junit printsummary="on" haltonfailure="yes" fork="true">
+            <classpath>
+                <path refid="classpath.test"/>
+                <pathelement location="${test.build.dir}"/>
+            </classpath>
+            <formatter type="brief" usefile="false" />
+            <batchtest>
+                <fileset dir="${test.src.dir}" includes="**/*Test.java" />
+            </batchtest>
+        </junit>
     </target>
 
     <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}"/>
         <jar destfile="${jar.dir}/${ant.project.name}.jar">
-            <fileset dir="${classes.dir}" />
-            <fileset dir="${src.dir}" includes="**/*.java"/>
+            <fileset dir="${main.build.dir}" />
+            <fileset dir="${main.src.dir}" includes="**/*.java"/>
         </jar>
     </target>
     

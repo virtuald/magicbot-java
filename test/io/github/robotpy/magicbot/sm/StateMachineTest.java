@@ -167,68 +167,68 @@ public class StateMachineTest {
 		sm.m_clock = wpitime;
 		
 		sm.some_fn();
-		assertEquals("", sm.m_currentState);
+		assertEquals("", sm.getCurrentState());
 		assertFalse(sm.isExecuting());
 		
 		sm.engage();
-	    assertEquals("first_state", sm.m_currentState);
+	    assertEquals("first_state", sm.getCurrentState());
 	    assertFalse(sm.isExecuting());
 	    
 	    sm.execute();
-	    assertEquals("second_state", sm.m_currentState); 
+	    assertEquals("second_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    // should not change
 	    sm.engage();
-	    assertEquals("second_state", sm.m_currentState);
+	    assertEquals("second_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    sm.execute();
-	    assertEquals("second_state", sm.m_currentState);
+	    assertEquals("second_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    wpitime.now += 1500;
 	    sm.engage();
 	    sm.execute();
-	    assertEquals("third_state", sm.m_currentState); 
+	    assertEquals("third_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    sm.engage();
 	    sm.execute();
-	    assertEquals("third_state", sm.m_currentState);
+	    assertEquals("third_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    // should be done
 	    sm.done();
-	    assertEquals("", sm.m_currentState);
+	    assertEquals("", sm.getCurrentState());
 	    assertFalse(sm.isExecuting());
 	    
 	    // should be able to start directly at second state
 	    sm.engage("second_state");
 	    sm.execute();
-	    assertEquals("second_state", sm.m_currentState); 
+	    assertEquals("second_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    wpitime.now += 1500;
 	    sm.engage();
 	    sm.execute();
-	    assertEquals("third_state", sm.m_currentState);
+	    assertEquals("third_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    // test force
 	    sm.engage();
 	    sm.execute();
-	    assertEquals("third_state", sm.m_currentState);
+	    assertEquals("third_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    sm.engage(true);
-	    assertEquals("first_state", sm.m_currentState); 
+	    assertEquals("first_state", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    sm.execute();
 	    sm.execute();
 	    assertFalse(sm.isExecuting());
-	    assertEquals("", sm.m_currentState);
+	    assertEquals("", sm.getCurrentState());
 	    
 	    assertEquals(
 	    	Arrays.asList("sf", "1", "2", "3", "3", "2", "3", "3", "1"),
@@ -238,7 +238,7 @@ public class StateMachineTest {
 	
 	/*
 	 * Unfortunately, Java doesn't support inheriting annotations...
-	 * 
+	 *
 	class InhBase extends StateMachine {
 		
 		@State
@@ -259,13 +259,13 @@ public class StateMachineTest {
 		InhChild sm = new InhChild();
 		
 		sm.engage();
-		assertEquals("first_state", sm.m_currentState);
+		assertEquals("first_state", sm.getCurrentState());
 		
 		sm.execute();
-		assertEquals("second_state", sm.m_currentState);
+		assertEquals("second_state", sm.getCurrentState());
 		
 		sm.execute();
-		assertEquals("", sm.m_currentState);
+		assertEquals("", sm.getCurrentState());
 		assertFalse(sm.isExecuting());
 	}*/
 	
@@ -316,7 +316,7 @@ public class StateMachineTest {
 	    sm.execute();
 	    sm.execute();
 	    
-	    assertEquals("", sm.m_currentState);
+	    assertEquals("", sm.getCurrentState());
 	    assertFalse(sm.isExecuting());
 	    
 	    sm.engage();
@@ -326,25 +326,25 @@ public class StateMachineTest {
 	    sm.execute();
 	    sm.execute();
 	    
-	    assertEquals("must_finish", sm.m_currentState); 
+	    assertEquals("must_finish", sm.getCurrentState());
 	    assertTrue(sm.isExecuting());
 	    
 	    sm.nextState("ordinary3");
 	    sm.engage();
 	    sm.execute();
 	    
-	    assertEquals("timed_must_finish", sm.m_currentState); 
+	    assertEquals("timed_must_finish", sm.getCurrentState());
 	    
 	    sm.execute();
 	    assertTrue(sm.isExecuting());
-	    assertEquals("timed_must_finish", sm.m_currentState); 
+	    assertEquals("timed_must_finish", sm.getCurrentState());
 	    
 	    for (int i = 0; i < 7; i++) {
 	        wpitime.now += 100;
 	    
 	        sm.execute();
 	        assertTrue(sm.isExecuting());
-	        assertEquals("timed_must_finish", sm.m_currentState);
+	        assertEquals("timed_must_finish", sm.getCurrentState());
 	    }
 	    
 	    wpitime.now += 1000;
