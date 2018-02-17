@@ -33,16 +33,21 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * Robots that use the MagicBot framework should use this as their
  * base robot class. If you use this as your base, you must
  * implement the following methods:
- * 
+ *
  * - createObjects
  * - teleopPeriodic
- * 
+ *
  * MagicRobot allows you to define multiple autonomous modes and
  * to select one of them via SmartDashboard/SFX.
- * 
+ *
+ * MagicRobot performs 'magic injection', which means that any objects present
+ * as instance variables in this class will be inspected for @MagicInject
+ * annotations, and identical objects from the Robot class will be copied
+ * to that object.
+ *
  * MagicRobot will set the following NetworkTables variables
  * automatically:
- * 
+ *
  * - /robot/mode: one of 'disabled', 'auto', 'teleop', or 'test'
  * - /robot/is_simulation: true/false
  * - /robot/is_ds_attached: true/false
@@ -63,12 +68,18 @@ public abstract class MagicRobot extends SampleRobot {
 		// create user objects
 		createObjects();
 		
-		// TODO: component injection
+		// perform injection on components
+		for (MagicComponent component: m_components) {
+			MagicInjector.inject(this, component, null);
+		}
 		
-		// perform injection on autonomous modes for now
+		// perform injection on autonomous modes
 		for (MagicAutonomous autonomous: m_autonomous.values()) {
 			MagicInjector.inject(this, autonomous, null);
 		}
+		
+		// inject anything present in the robot
+		MagicInjector.injectChildren(this, this);
 		
 		SmartDashboard.putData("Autonomous Mode", m_autoChooser);
 		
@@ -93,7 +104,7 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Add an autonomous mode
-	 * 
+	 *
 	 * @param name			Name to be displayed to the user
 	 * @param autonomous	Autonomous mode object
 	 */
@@ -103,7 +114,7 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Add an autonomous mode
-	 * 
+	 *
 	 * @param name			Name to be displayed to the user
 	 * @param autonomous	Autonomous mode object
 	 * @param default       If true, set to be the default mode
@@ -118,7 +129,7 @@ public abstract class MagicRobot extends SampleRobot {
 		if (defaultMode) {
 			m_autoChooser.addDefault(name, name);
 		} else {
-			m_autoChooser.addObject(name, name);	
+			m_autoChooser.addObject(name, name);
 		}
 	}
 	
@@ -129,10 +140,10 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Initialization code for disabled mode should go here.
-	 * 
+	 *
 	 * Users may override this method for initialization code which will be
 	 * called each time the robot enters disabled mode.
-	 * 
+	 *
 	 * Note: the 'on_disable' functions of all components are called
 	 *       before this function is called
 	 */
@@ -142,10 +153,10 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Periodic code for disabled mode should go here
-	 * 
+	 *
 	 * Users should override this method for code which will be called
 	 * periodically at a regular rate while the robot is in disabled mode.
-	 * 
+	 *
 	 */
 	protected void disabledPeriodic() {
 		// empty
@@ -153,13 +164,13 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Initialization code for teleop control code may go here.
-	 * 
+	 *
 	 * Users may override this method for initialization code which will be
 	 * called each time the robot enters teleop mode.
-	 * 
+	 *
 	 * The 'on_enable' functions of all components are called
 	 * before this function is called
-	 * 
+	 *
 	 */
 	protected void teleopInit() {
 		// empty
@@ -167,10 +178,10 @@ public abstract class MagicRobot extends SampleRobot {
 	
 	/**
 	 * Periodic code for teleop mode should go here.
-	 * 
+	 *
 	 * Users should override this method for code which will be called
 	 * periodically at a regular rate while the robot is in teleop mode.
-	 * 
+	 *
 	 * This code executes before the 'execute' functions of all
 	 * components are called
 	 */

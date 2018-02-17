@@ -23,11 +23,12 @@ import java.lang.annotation.Target;
 
 /**
  * If this annotation is applied to a variable in a class, then the identical
- * object in the Robot class will be copied to this variable after the component
- * constructor is called.
- * 
- * This annotation can be used on anything that inherits from MagicComponent and
- * is added to the robot via addComponent or addAutonomous
+ * object in the Robot class will be copied to this variable after
+ * MagicRobot.createObjects is called.
+ *
+ * This annotation can be used on any object that is stored as an instance
+ * variable on your Robot class, or on autonomous modes that are added to your
+ * robot via addAutonomous.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

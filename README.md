@@ -23,7 +23,6 @@ Differences between the Java and Python implementations
 * Autonomous modes must implement the `MagicAutonomous` interface (though, you really
   should be inheriting from AutonomousStateMachine)
 * Need to call `addAutonomous` and `addComponent` in Robot.java
-* Magic injection is only performed on autonomous modes, not on components
 * The `tunable` functionality is not implemented
 * State machines are not tunable via NetworkTables
 * No per-component logger objects

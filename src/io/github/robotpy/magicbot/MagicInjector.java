@@ -57,6 +57,23 @@ class MagicInjector {
 					throw new RuntimeException("Error setting field + " + injectFieldName + " in " + toName, e);
 				}
 			}
-		}	
+		}
+	}
+	
+	static public void injectChildren(Object parent, Object source) {
+		Field [] fields = parent.getClass().getDeclaredFields();
+		for (Field sourceField: fields) {
+			sourceField.setAccessible(true);
+			Object o = null;
+			try {
+				o = sourceField.get(parent);
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// empty
+			}
+			
+			if (o != null) {
+				inject(source, o, null);
+			}
+		}
 	}
 }
