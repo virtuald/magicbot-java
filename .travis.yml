@@ -1,0 +1,5 @@
+language: java
+install:
+- mkdir -p ~/wpilib/java/current/lib
+- wget http://first.wpi.edu/FRC/roborio/maven/release/edu/wpi/first/wpilibj/wpilibj-java/2018.3.2/wpilibj-java-2018.3.2.jar -O ~/wpilib/java/current/lib/wpilib.jar
+- wget http://first.wpi.edu/FRC/roborio/maven/release/edu/wpi/first/ntcore/ntcore-java/4.0.0/ntcore-java-4.0.0.jar -O ~/wpilib/java/current/lib/ntcore.jar
