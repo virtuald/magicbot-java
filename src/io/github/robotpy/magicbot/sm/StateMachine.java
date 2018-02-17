@@ -371,14 +371,22 @@ public class StateMachine implements MagicComponent {
 		
 		// determine if the time has passed to execute the next state
 		// -> intentionally comes first
-		if (state != null && state.expires < tm) {
-            if (state.nextState == null) {
-                state = null;
-            } else {
-                nextState(state.nextState);
-                new_state_start = state.expires;
-                state = m_state;
-            }
+		if (state != null && state.ran && state.expires < tm) {
+			new_state_start = state.expires;
+			
+			if (state.nextState == null) {
+				// If the state expires and it's the last state, if the machine
+				// is still engaged then it should cycle back to the beginning
+				if (m_shouldEngage) {
+					nextState(m_firstState);
+					state = m_state;
+				} else {
+					state = null;
+				}
+			} else {
+				nextState(state.nextState);
+				state = m_state;
+			}
 		}
         
 		// deactivate the current state unless engage was called

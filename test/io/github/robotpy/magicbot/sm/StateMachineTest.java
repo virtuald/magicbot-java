@@ -500,4 +500,49 @@ public class StateMachineTest {
 		assertFalse(sm.defaultInit);
 		assertFalse(sm.didDone);
 	}
+	
+	class ShortTimedState extends StateMachine {
+		
+		public List<String> executed = new ArrayList<>();
+		
+		public ShortTimedState() {
+			super();
+			m_verboseLogging = true;
+		}
+		
+		@DefaultState
+		public void d() {
+			executed.add("d");
+		}
+		
+		@State(first=true)
+		public void a() {
+			executed.add("a");
+			nextState("b");
+		}
+		
+		@TimedState(duration=0.01)
+		public void b() {
+			executed.add("b");
+		}
+	}
+	
+	@Test
+	public void testShortTimedState() {
+		ShortTimedState sm = new ShortTimedState();
+		FakeClock wpitime = new FakeClock();
+		sm.m_clock = wpitime;
+		
+		for (int i = 0; i < 8; i++) {
+			sm.engage();
+			sm.execute();
+			assertEquals("b", sm.getCurrentState());
+			wpitime.now += 20;
+		}
+		
+		assertEquals(
+			Arrays.asList("a", "b", "a", "b", "a", "b", "a", "b"),
+			sm.executed
+		);
+	}
 }

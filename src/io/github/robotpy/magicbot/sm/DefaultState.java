@@ -23,8 +23,10 @@ import java.lang.annotation.RetentionPolicy;
  * If this annotation is applied to a method in an object that inherits
  * from :class:`.StateMachine`, it indicates that the function
  * is a default state; that is, if no other states are executing, this
- * state will execute. There can only be a single default state in a
- * StateMachine object.
+ * state will execute.  If the state machine is always executing, the
+ * default state will never execute.
+ *
+ * There can only be a single default state in a StateMachine object.
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DefaultState {

@@ -23,6 +23,9 @@ import java.lang.annotation.RetentionPolicy;
  * If this decorator is applied to a function in an object that inherits
  * from :class:`.StateMachine`, it indicates that the function
  * is a state that will run for a set amount of time unless interrupted
+ *
+ * It is guaranteed that a TimedState will execute at least once, even if
+ * it expires prior to being executed
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TimedState {
