@@ -1,19 +1,17 @@
 Magicbot framework (Java)
 =========================
 
+[![Build Status](https://travis-ci.org/virtuald/magicbot-java.svg?branch=master)](https://travis-ci.org/virtuald/magicbot-java)
+
 This is an implementation of the [RobotPy MagicBot framework](http://robotpy.readthedocs.io/en/stable/frameworks/magicbot.html)
 for Java. MagicBot is an opinionated framework for creating Python robot
 programs for the FIRST Robotics Competition. It is envisioned to be an easier
 to use and less verbose alternative to the WPILib Command framework.
 
-The code in this repository was used in the 2017 season on an FRC robot, and
-should Just Work if you copy the src/test directories into your robot code
-directory. While the code is not as extensively tested as the python framework,
-the unit tests from python for the state machine functionality have been ported
-to JUnit and should all pass.
-
-Perhaps one day this project will release build artifacts, but only
-if there is significant interest in this framework.
+The code in this repository was used in the 2017/2018 season on an FRC robot.
+While the code is not as extensively tested as the python framework, the unit
+tests from python for the state machine functionality have been ported
+to JUnit and are tested on travis-ci.
 
 
 Differences between the Java and Python implementations
@@ -39,6 +37,8 @@ Documentation
 
 Refer to the [MagicBot python documentation](http://robotpy.readthedocs.io/en/stable/frameworks/magicbot.html),
 the philosophy is the same and the implementations are very similar.
+
+### Autonomous Mode State Machines
 
 Here's an example of an autonomous state machine that moves a robot forward for
 2.5 seconds, rotates for 1 second, then moves forward for another second. We
@@ -72,6 +72,39 @@ Obviously, this is a trivial example, but hopefully it shows the potential of
 the approach! Teams I've worked with have used the python implementation of this
 very successfully, and it makes writing complex sequences of steps very easy to
 do.
+
+### Magic Injection
+
+Magic injection is cool! Say you have your robot class, and two other objects.
+
+```java
+public class Robot extends MagicRobot {
+    Component1 component1;
+    Component2 component2;
+    
+    @Override
+    public void createObjects() {
+        component1 = new Component1();
+        component2 = new Component2();
+    }
+}
+```
+
+```java
+public class Component1 {
+    @MagicInject
+    Component2 component2;
+}
+```
+
+Once the robot has initialized and `createObjects` has exited, then the
+`component2` variable in the `Component1` class will be set to the instance
+of `component2` that was present in the original Robot class.
+
+This is really useful because you don't have to pass variables around everywhere,
+you can just use injection and they'll be injected automatically for you.
+
+### Other stuff
 
 Feel free to edit this README and add better docs!!
 
