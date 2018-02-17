@@ -28,6 +28,13 @@ Differences between the Java and Python implementations
 * State machines are not tunable via NetworkTables
 * No per-component logger objects
 
+Installation
+------------
+
+Download the latest Magicbot.jar from https://github.com/virtuald/magicbot-java/releases
+and put it in `~/wpilib/user/java/lib`. Magicbot will be available the next time
+that you restart eclipse.
+
 Documentation
 -------------
 
