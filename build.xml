@@ -24,7 +24,10 @@
 
     <target name="jar" depends="compile">
         <mkdir dir="${jar.dir}"/>
-        <jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${classes.dir}"/>
+        <jar destfile="${jar.dir}/${ant.project.name}.jar">
+            <fileset dir="${classes.dir}" />
+            <fileset dir="${src.dir}" includes="**/*.java"/>
+        </jar>
     </target>
     
     <target name="publish" depends="jar">
