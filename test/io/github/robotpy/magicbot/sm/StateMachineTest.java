@@ -358,6 +358,81 @@ public class StateMachineTest {
 	    );
 	}
 	
+	class AutonomousSm extends AutonomousStateMachine {
+		
+		public int i = 0;
+		
+		@State(first=true)
+		public void something() {
+			i += 1;
+			if (i == 6) {
+				done();
+			}
+		}
+	}
+	
+	@Test
+	public void testAutonomousSm() {
+		AutonomousSm sm = new AutonomousSm();
+		
+		sm.onEnabled();
+		
+		for (int i = 0; i < 5; i++) {
+			sm.autonomousPeriodic();
+			assertTrue(sm.isExecuting());
+		}
+		
+		for (int i = 0; i < 5; i++) {
+			sm.autonomousPeriodic();
+			assertFalse(sm.isExecuting());
+		}
+		
+		assertEquals(6, sm.i);
+	}
+	
+	class AutonomousSmTimedEnd extends AutonomousStateMachine {
+		
+		public int i = 0;
+		public int j = 0;
+		
+		@State(first=true)
+		public void something() {
+			i += 1;
+			if (i == 3) {
+				nextState("timed");
+			}
+		}
+		
+		@TimedState(duration=1)
+		public void timed() {
+			j += 1;
+		}
+	}
+	
+	@Test
+	public void testAutonomousSmEndTimedState() {
+		AutonomousSmTimedEnd sm = new AutonomousSmTimedEnd();
+		FakeClock wpitime = new FakeClock();
+		sm.m_clock = wpitime;
+		
+		sm.onEnabled();
+		
+		for (int i = 0; i < 5; i++) {
+			wpitime.now += 700;
+			sm.autonomousPeriodic();
+			assertTrue(sm.isExecuting());
+		}
+		
+		for (int i = 0; i < 5; i++) {
+			wpitime.now += 700;
+			sm.autonomousPeriodic();
+			assertFalse(sm.isExecuting());
+		}
+		
+		assertEquals(3, sm.i);
+		assertEquals(2, sm.j);
+	}
+	
 	class MultipleDefaultStates extends StateMachine {
 		@State(first=true)
 		private void tmp1(Double tm) {}
@@ -525,6 +600,12 @@ public class StateMachineTest {
 		public void b() {
 			executed.add("b");
 		}
+		
+		@Override
+		public void done() {
+			super.done();
+			executed.add("d");
+		}
 	}
 	
 	@Test
@@ -541,7 +622,7 @@ public class StateMachineTest {
 		}
 		
 		assertEquals(
-			Arrays.asList("a", "b", "a", "b", "a", "b", "a", "b"),
+			Arrays.asList("a", "b", "d", "a", "b", "d", "a", "b", "d", "a", "b"),
 			sm.executed
 		);
 	}

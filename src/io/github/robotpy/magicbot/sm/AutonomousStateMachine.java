@@ -21,7 +21,7 @@ import io.github.robotpy.magicbot.MagicAutonomous;
 /**
  * This is a specialized version of the StateMachine that is designed
  * to be used as an autonomous mode. There are a few key differences:
- * 
+ *
  * - The engage function is always called, so the state machine
  *   will always run to completion unless done() is called
  * - Messages will always be printed out upon each state transition
@@ -51,5 +51,10 @@ public class AutonomousStateMachine extends StateMachine implements MagicAutonom
 			execute();
 			m_engaged = isExecuting();
 		}
+	}
+	
+	public void done() {
+		super.done();
+		__internal_autonomous_exit();
 	}
 }

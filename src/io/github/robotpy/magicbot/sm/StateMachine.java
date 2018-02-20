@@ -35,36 +35,36 @@ import io.github.robotpy.magicbot.exceptions.NoFirstStateException;
 /**
  * This object is designed to be used to easily implement magicbot
  * components that are basically a big state machine.
- * 
+ *
  * You use this by defining a class that inherits from ``StateMachine``.
  * To define each state, you use the ``timed_state`` decorator on a
  * function. When each state is run, the decorated function will be
  * called. Annotated state functions can receive the following
  * parameters:
- * 
+ *
  * - ``tm`` - The number of seconds since the state machine has been active
  * - ``stateTm`` - The number of seconds since this state has been active
  *   (note: it may not start at zero!)
  * - ``initialCall`` - Set to true when the state is initially called,
  *   false otherwise. If the state is switched to multiple times, this
  *   will be set to true at the start of each state.
- *   
+ *
  * To be consistent with the magicbot philosophy, in order for the
  * state machine to execute its states you must call the
  * ``engage`` function upon each execution of the main
  * robot control loop. If you do not call this function, then
  * execution will cease unless the current executing state is
  * marked as ``must_finish``.
- * 
+ *
  * When execution ceases, the ``done`` function will be called
  * unless execution was stopped by calling the ``done`` function.
- * 
+ *
  * As a magicbot component, this contains an ``execute`` function that
  * will be called on each control loop. All state execution occurs from
  * within that function call. If you call other components from this
  * component, you should ensure that your component occurs *before*
  * the other components in your Robot class.
- * 
+ *
  * @warning This object is not intended to be threadsafe
  */
 public class StateMachine implements MagicComponent {
@@ -227,7 +227,7 @@ public class StateMachine implements MagicComponent {
 					throw new MultipleFirstStatesError("Multiple states were specified as the first state!");
 				}
 				
-				firstState = state.name;	
+				firstState = state.name;
 			}
 			
 			if (state.isDefault) {
@@ -302,7 +302,7 @@ public class StateMachine implements MagicComponent {
 
 	/**
 	 * Call this function to transition to the next state
-	 * 
+	 *
 	 * @param name Name of the state to transition to
 	 */
 	protected void nextState(String name) {
@@ -318,7 +318,7 @@ public class StateMachine implements MagicComponent {
 	/**
 	 * Call this function to transition to the next state, and call the next
 	 * state function immediately. Prefer to use 'next_state' instead.
-	 * 
+	 *
 	 * @param name Name of the state to transition to
 	 */
 	protected void nextStateNow(String name) {
@@ -329,6 +329,9 @@ public class StateMachine implements MagicComponent {
 	
 	/**
 	 * Call this function to end execution of the state machine
+	 *
+	 * This function will always be called when a state machine ends. Even if
+	 * the engage function is called repeatedly, done() will be called.
 	 */
 	public void done() {
 		if (m_verboseLogging && m_state != null) {
@@ -363,6 +366,7 @@ public class StateMachine implements MagicComponent {
 		// tm is the number of seconds that the state machine has been executing
 		double tm = now - m_start;
 		StateData state = m_state;
+		boolean done_called = false;
 		
 		// we adjust this so that if we have states chained together,
         // then the total time it runs is the amount of time of the
@@ -377,6 +381,10 @@ public class StateMachine implements MagicComponent {
 			if (state.nextState == null) {
 				// If the state expires and it's the last state, if the machine
 				// is still engaged then it should cycle back to the beginning
+				// ... but we should call done() first
+				done_called = true;
+				done();
+				
 				if (m_shouldEngage) {
 					nextState(m_firstState);
 					state = m_state;
@@ -422,12 +430,17 @@ public class StateMachine implements MagicComponent {
             
             // execute the state function, passing it the arguments
             state.stateMethod.execute(tm - state.startTime, initial_call);
-        } else {
+        } else if (!done_called) {
         	// or clear the state
         	done();
         }
         
         // Reset this each time
         m_shouldEngage = false;
+	}
+	
+	/** don't use this; internal use only */
+	protected void __internal_autonomous_exit() {
+		m_shouldEngage = false;
 	}
 }
