@@ -224,7 +224,7 @@ public abstract class MagicRobot extends SampleRobot {
         //    doesn't seem to have a default (nor will it show a default),
         //    so the key will only get set if you set it.
 		String modeName = SmartDashboard.getString("Auto Selector", "");
-		if (modeName == null) {
+		if (modeName.equals("")) {
 			modeName = m_autoChooser.getSelected();
 		}
 		
