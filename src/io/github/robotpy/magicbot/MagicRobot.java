@@ -163,6 +163,20 @@ public abstract class MagicRobot extends SampleRobot {
 	}
 	
 	/**
+	 * Global initialization code for autonomous control code may go here.
+	 *
+	 * Users may override this method for initialization code which will be
+	 * called each time the robot enters autonomous mode.
+	 *
+	 * The 'on_enable' functions of all components are called
+	 * before this function is called
+	 *
+	 */
+	protected void autonomousInit() {
+		// empty
+	}
+	
+	/**
 	 * Initialization code for teleop control code may go here.
 	 *
 	 * Users may override this method for initialization code which will be
@@ -197,6 +211,7 @@ public abstract class MagicRobot extends SampleRobot {
 		m_nt.putBoolean("is_ds_attached", dsAttached);
 		
 		disableComponents();
+		disabledInit();
 		
 		while (isDisabled()) {
 			if (dsAttached != m_ds.isDSAttached()) {
@@ -216,6 +231,7 @@ public abstract class MagicRobot extends SampleRobot {
 		m_nt.putBoolean("is_ds_attached", m_ds.isDSAttached());
 		
 		enableComponents();
+		autonomousInit();
 		
 		MagicAutonomous autoMode;
 		
